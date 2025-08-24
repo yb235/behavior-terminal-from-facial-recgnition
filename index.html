@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physiognomic Risk & Behavioral Analysis Terminal</title>
+    <style>
+        /* Bloomberg-inspired Terminal Theme */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --terminal-bg: #000000;
+            --terminal-text: #E0E0E0;
+            --amber-accent: #FFBF00;
+            --blue-accent: #00A0FF;
+            --red-negative: #D43D3D;
+            --green-positive: #00C781;
+            --header-bg: #1C1C1C;
+            --border-color: #333333;
+        }
+
+        body {
+            font-family: 'Consolas', 'Menlo', 'Courier New', monospace;
+            background: var(--terminal-bg);
+            color: var(--terminal-text);
+            overflow-x: hidden;
+            font-size: 16px;
+        }
+
+        /* Ticker Bar */
+        .stock-ticker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--header-bg);
+            color: var(--terminal-text);
+            padding: 0.5rem 1rem;
+            overflow: hidden;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: tickerScroll 60s linear infinite;
+        }
+
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); } /* Animate to 50% since content is duplicated */
+        }
+
+        .ticker-item { margin: 0 1.5rem; display: inline-block; font-size: 0.9rem; }
+        .gain { color: var(--green-positive); }
+        .loss { color: var(--red-negative); }
+        .ticker-item span { margin-left: 0.5rem; }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .main-title {
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: normal;
+            text-align: center;
+            color: var(--amber-accent);
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--terminal-text);
+            max-width: 800px;
+        }
+
+        .cta-btn {
+            font-size: 1.2rem;
+            padding: 0.8rem 2rem;
+            background: var(--amber-accent);
+            border: 1px solid var(--amber-accent);
+            color: var(--terminal-bg);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Consolas', 'Menlo', 'Courier New', monospace;
+        }
+
+        .cta-btn:hover {
+            background: var(--terminal-bg);
+            color: var(--amber-accent);
+        }
+
+        /* General Section Styling */
+        .section {
+            padding: 4rem 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            font-weight: normal;
+            color: var(--blue-accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .subsection-title {
+            font-size: 2rem;
+            text-align: left;
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+            font-weight: normal;
+            color: var(--amber-accent);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        /* Methodology Section */
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .step-card {
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            transition: border-color 0.3s;
+        }
+        
+        .step-card:hover {
+            border-color: var(--blue-accent);
+        }
+
+        .step-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--blue-accent);
+            margin-bottom: 1rem;
+        }
+
+        .step-card h3 {
+            color: var(--amber-accent);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Data Display Grid */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1rem;
+        }
+
+        .data-card {
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .data-card h3 {
+            color: var(--amber-accent);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .data-card p {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .learn-more-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--border-color);
+            color: var(--terminal-text);
+            border: none;
+            width: 25px;
+            height: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .learn-more-btn:hover {
+            background: var(--blue-accent);
+            color: var(--terminal-bg);
+        }
+
+        .meter {
+            width: 100%;
+            height: 20px;
+            background: #222;
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: var(--blue-accent);
+            transition: width 2s ease-out;
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            padding: 4rem 2rem;
+            text-align: center;
+            background: var(--header-bg);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--amber-accent);
+            background: #111;
+        }
+        
+        .upload-zone p {
+            font-size: 1.1rem;
+        }
+        
+        #imagePreview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .terminal-text {
+            font-family: 'Consolas', 'Menlo', 'Courier New', monospace;
+            color: var(--terminal-text);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Results Section */
+        #results-section { display: none; }
+        
+        .science-disclaimer {
+            font-size: 1rem;
+            background: rgba(255, 191, 0, 0.1);
+            border: 1px solid var(--amber-accent);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .science-disclaimer strong {
+            color: var(--amber-accent);
+        }
+
+        .results-summary {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .summary-card {
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+        
+        .summary-card h3 {
+            color: var(--blue-accent);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        #ape-index-score {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--amber-accent);
+        }
+
+        .balance-visualizer {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 120px;
+            padding: 0 1rem;
+        }
+
+        .balance-bar {
+            width: 35%;
+            background-color: #333;
+            transition: height 2s ease-out;
+            position: relative;
+        }
+        
+        .balance-bar span {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+        }
+
+        #dopamine-bar { background-color: var(--amber-accent); }
+        #serotonin-bar { background-color: var(--blue-accent); }
+        #dopamine-bar span { color: var(--amber-accent); }
+        #serotonin-bar span { color: var(--blue-accent); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--header-bg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .disclaimer {
+            font-size: 0.8rem;
+            color: #777;
+            margin-top: 2rem;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+
+        /* Loading Animation */
+        .loading-container { display: none; text-align: center; margin-top: 2rem; }
+        .loading-text { display: block; margin-top: 1rem; font-size: 1.2rem; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: var(--terminal-bg);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem;
+            max-width: 700px;
+            width: 90%;
+            position: relative;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 20px;
+            font-size: 1.5rem;
+            color: var(--terminal-text);
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        .modal-title { font-size: 1.8rem; color: var(--amber-accent); margin-bottom: 1.5rem; }
+        .modal-body p { margin-bottom: 1rem; line-height: 1.7; }
+        .modal-body strong { color: var(--blue-accent); }
+        .modal-body .science-bit {
+            background: var(--header-bg);
+            border-left: 3px solid var(--blue-accent);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { font-size: 14px; }
+            .steps-container, .data-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stock-ticker">
+        <div class="ticker-content">
+            <span class="ticker-item">S&P 500 <span class="gain">+0.45% ▲</span></span>
+            <span class="ticker-item">NASDAQ <span class="gain">+0.72% ▲</span></span>
+            <span class="ticker-item">VIX <span class="loss">-2.10% ▼</span></span>
+            <span class="ticker-item">USD/EUR <span class="gain">+0.15% ▲</span></span>
+            <span class="ticker-item">WTI CRUDE <span class="loss">-0.88% ▼</span></span>
+            <span class="ticker-item">GOLD <span class="gain">+0.33% ▲</span></span>
+            <span class="ticker-item">BTC <span class="loss">-1.54% ▼</span></span>
+        </div>
+    </div>
+
+    <section class="hero">
+        <h1 class="main-title">Physiognomic Risk & Behavioral Analysis Terminal</h1>
+        <p class="tagline">Upload a facial image to receive a probabilistic assessment of behavioral economic traits based on the principles of Mian Xiang (面相).</p>
+        <button class="cta-btn" onclick="scrollToUpload()">Initiate Facial Data Analysis</button>
+    </section>
+
+    <section class="section">
+        <h2 class="section-title">Methodology</h2>
+        <div class="steps-container">
+            <div class="step-card">
+                <div class="step-number">01.</div>
+                <h3>Data Ingestion</h3>
+                <p>Securely upload a clear, forward-facing facial image. The system processes the image locally.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">02.</div>
+                <h3>Feature Vectoring</h3>
+                <p>The system identifies key facial landmarks and calculates geometric relationships between them.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">03.</div>
+                <h3>Algorithmic Profiling</h3>
+                <p>A proprietary algorithm maps facial feature vectors to a series of behavioral and cognitive traits.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">04.</div>
+                <h3>Report Generation</h3>
+                <p>Receive a detailed, anonymized report on physiognomically-indicated behavioral predispositions.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="upload-section">
+        <h2 class="section-title">Image Upload & Processing</h2>
+        <div class="upload-zone" id="dropZone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);">
+            <p style="font-size: 3rem;">[ DROP IMAGE HERE ]</p>
+            <p style="margin: 1rem 0;">or</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+            <button class="cta-btn" onclick="document.getElementById('fileInput').click()">SELECT FILE</button>
+            <img id="imagePreview" src="" alt="Facial Image Preview">
+            <p style="margin-top: 2rem; color: #888;">Supported Formats: .jpg, .png, .webp</p>
+        </div>
+        <div class="loading-container" id="loadingContainer">
+            <div class="loading-text" id="loadingText"></div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="section" id="results-section">
+        <h2 class="section-title">Behavioral Physiognomic Profile Analysis</h2>
+        <div class="science-disclaimer">
+            <strong>Disclaimer for Entertainment & Educational Use:</strong> The following analysis is a fictional interpretation for entertainment purposes, based on principles of traditional physiognomy. Real-world financial behavior is a multifactorial trait influenced by education, environment, and personal decisions. <strong>This does not constitute financial or medical advice.</strong> Physiognomic indicators are not deterministic.
+        </div>
+
+        <div class="results-summary">
+            <div class="summary-card">
+                <h3>Action Propensity Index</h3>
+                <div id="ape-index-score">--</div>
+                <p class="terminal-text" id="ape-index-text">> ACTION_BIAS: PENDING...</p>
+                <button class="learn-more-btn" onclick="showModal('actionIndex')">?</button>
+            </div>
+            <div class="summary-card">
+                <h3>Intuition vs. Logic Balance</h3>
+                <div class="balance-visualizer">
+                    <div class="balance-bar" id="dopamine-bar" style="height: 50%;"><span>Intuitive (Yang)</span></div>
+                    <div class="balance-bar" id="serotonin-bar" style="height: 50%;"><span>Analytical (Yin)</span></div>
+                </div>
+                <p class="terminal-text">> COGNITIVE_STYLE_PREFERENCE</p>
+                <button class="learn-more-btn" onclick="showModal('yinYang')">?</button>
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Core Behavioral Profile</h3>
+        <div class="data-grid">
+            <div class="data-card"><h3>🎲 Risk Tolerance</h3><p>Propensity for novel and uncertain outcomes</p><div class="meter"><div class="meter-fill" id="risk-meter"></div></div><p class="terminal-text" id="risk-text"></p><button class="learn-more-btn" onclick="showModal('risk')">?</button></div>
+            <div class="data-card"><h3>💎 Loss Aversion Index</h3><p>Asymmetry in the psychological impact of gains versus losses</p><div class="meter"><div class="meter-fill" id="loss-aversion-meter"></div></div><p class="terminal-text" id="loss-aversion-text"></p><button class="learn-more-btn" onclick="showModal('lossAversion')">?</button></div>
+            <div class="data-card"><h3>🎰 Temporal Discounting Profile</h3><p>Preference for immediate versus delayed rewards</p><div class="meter"><div class="meter-fill" id="temporal-discounting-meter"></div></div><p class="terminal-text" id="temporal-discounting-text"></p><button class="learn-more-btn" onclick="showModal('temporalDiscounting')">?</button></div>
+            <div class="data-card"><h3>😱 Stress-Induced Divestment Probability</h3><p>Tendency toward irrational divestment under market stress</p><div class="meter"><div class="meter-fill" id="panic-meter"></div></div><p class="terminal-text" id="panic-text"></p><button class="learn-more-btn" onclick="showModal('panic')">?</button></div>
+            <div class="data-card"><h3>📊 Strategic Adherence Capability</h3><p>Capacity for disciplined, long-term strategy execution</p><div class="meter"><div class="meter-fill" id="dca-meter"></div></div><p class="terminal-text" id="dca-text"></p><button class="learn-more-btn" onclick="showModal('dca')">?</button></div>
+            <div class="data-card"><h3>🔄 Error Correction Aptitude</h3><p>Cognitive flexibility in response to negative feedback</p><div class="meter"><div class="meter-fill" id="mistake-meter"></div></div><p class="terminal-text" id="mistake-text"></p><button class="learn-more-btn" onclick="showModal('mistake')">?</button></div>
+        </div>
+    </section>
+
+    <footer>
+        <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #888; font-weight: normal;">PHYSIOGNOMIC BEHAVIORAL ANALYSIS TERMINAL</h3>
+        <p class="disclaimer">This platform provides a simulated analysis based on principles of traditional physiognomy (Mian Xiang). It is not a diagnostic tool and does not provide financial or medical advice. The associations between facial features and complex behaviors are not scientifically validated. Environmental and stochastic factors are the predominant determinants of financial outcomes. All data is processed locally in your browser and is not uploaded or stored.</p>
+    </footer>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="debias-modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation();">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title" id="modal-title"></h2>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- UI AND EVENT HANDLING ---
+
+        const modalContent = {
+            risk: { 
+                title: "Risk Tolerance", 
+                body: "<p><strong>Behavioral Implication:</strong> This metric assesses an individual's propensity to engage with uncertainty and novelty. A higher score indicates a greater willingness to accept variance in outcomes in pursuit of higher expected returns.</p>" +
+                      "<div class='science-bit'><p><strong>Physiognomic Correlates:</strong> Risk tolerance is often associated with features indicating strong 'Yang' energy. A broad, high forehead suggests analytical capacity, while a strong, angular jawline indicates determination and the fortitude to withstand volatility. Large, prominent ears are also seen as indicators of a willingness to take calculated risks early in life.</p></div>" +
+                      "<p><strong>Cognitive Mitigation Strategy:</strong> To counteract excessive risk-seeking, implement a mandatory cooling-off period (e.g., 48 hours) before executing trades based on high-conviction, high-risk ideas. This allows analytical thought to override initial impulses.</p>" 
+            },
+            lossAversion: { 
+                title: "Loss Aversion", 
+                body: "<p><strong>Behavioral Implication:</strong> This metric reflects the degree to which an individual perceives the psychological impact of a loss as being more significant than the impact of an equivalent gain.</p>" +
+                      "<div class='science-bit'><p><strong>Physiognomic Correlates:</strong> High loss aversion is linked to features indicating sensitivity. Thin lips and close-set eyes may suggest a more cautious, detail-oriented nature that is acutely sensitive to negative outcomes. A weaker or recessed chin can indicate a lower reserve of willpower to endure financial drawdowns.</p></div>" +
+                      "<p><strong>Cognitive Mitigation Strategy:</strong> Pre-commit to an investment plan by defining explicit entry, exit, and stop-loss levels before initiating a position. This rule-based approach mitigates the influence of in-the-moment emotional responses to market volatility.</p>" 
+            },
+            temporalDiscounting: { 
+                title: "Temporal Discounting", 
+                body: "<p><strong>Behavioral Implication:</strong> This trait measures an individual's preference for smaller, more immediate rewards over larger, delayed rewards. A high rate of temporal discounting is associated with impulsivity and a short-term investment horizon.</p>" +
+                      "<div class='science-bit'><p><strong>Physiognomic Correlates:</strong> A preference for immediate gratification is often linked to a rounded facial structure and a shorter distance between the nose and upper lip (philtrum). These features are thought to indicate a focus on immediate sensory experience over long-term planning. Conversely, a long philtrum and a prominent nose bridge are associated with patience and a long-term view.</p></div>" +
+                      "<p><strong>Cognitive Mitigation Strategy:</strong> Employ a 'core-satellite' portfolio structure. Allocate a significant majority (e.g., 80-90%) of capital to long-term, passive investments (the 'core'), while allowing a small, defined portion for short-term, higher-risk strategies (the 'satellite').</p>" 
+            },
+            panic: { 
+                title: "Stress-Induced Divestment", 
+                body: "<p><strong>Behavioral Implication:</strong> This metric assesses the predisposition to make irrational, fear-based decisions, such as liquidating assets during periods of high market volatility and significant portfolio drawdowns.</p>" +
+                      "<div class='science-bit'><p><strong>Physiognomic Correlates:</strong> The tendency towards panic is read in the eyes and eyebrows. Eyes that show a significant amount of white below the iris ('Sanpaku' eyes) or downward-sloping eyebrows are traditionally seen as indicators of emotional turbulence and a susceptibility to fear and anxiety under pressure.</p></div>" +
+                      "<p><strong>Cognitive Mitigation Strategy:</strong> When experiencing market-induced stress, shift the analytical timeframe. Instead of observing intraday price movements, analyze long-term charts (e.g., 5-year or 10-year). This contextual shift can dampen the immediate threat response.</p>" 
+            },
+            dca: { 
+                title: "Strategic Adherence Capability", 
+                body: "<p><strong>Behavioral Implication:</strong> This trait relates to the cognitive control required to consistently execute a pre-determined investment plan, such as Dollar-Cost Averaging (DCA), irrespective of market conditions.</p>" +
+                      "<div class='science-bit'><p><strong>Physiognomic Correlates:</strong> Discipline and adherence to a plan are associated with strong, balanced features. A straight, well-defined nose bridge, a firm jawline, and clear, steady eyes all point to a personality capable of setting a course and sticking to it. These features suggest a balance of intellect (forehead), ambition (nose), and willpower (jaw).</p></div>" +
+                      "<p><strong>Cognitive Mitigation Strategy:</strong> Leverage technology to enforce discipline. Automate regular investment contributions through a broker's recurring investment feature. This removes the emotional component from the decision-making process.</p>" 
+            },
+            mistake: {
+                title: "Error Correction Aptitude",
+                body: "<p><strong>Behavioral Implication:</strong> This assesses an individual's ability to respond to negative feedback (a losing trade) with cognitive flexibility, such as by divesting, rather than by emotional escalation of commitment (doubling down).</p>" +
+                      "<div class='science-bit'><p><strong>Physiognomic Correlates:</strong> Cognitive flexibility is often associated with the forehead and ears. A broad, clear forehead indicates strong analytical ability, while ears that are pliable and well-formed suggest an ability to listen to feedback and adapt. A stubborn or rigid nature, conversely, might be indicated by a very bony facial structure or a low, narrow forehead.</p></div>" +
+                      "<p><strong>Cognitive Mitigation Strategy:</strong> Maintain a decision journal. For each divested position, particularly those at a loss, document the initial thesis and the factors that invalidated it. This practice reframes the loss as a learning opportunity and mitigates the emotional drive to escalate commitment.</p>"
+            },
+            actionIndex: {
+                title: "Action Propensity Index",
+                body: "<p><strong>Behavioral Implication:</strong> A composite index derived from measures of risk tolerance, temporal discounting, and strategic adherence, designed to quantify an overall predisposition toward decisive, proactive financial behavior versus a more passive, conservative stance.</p>" +
+                      "<div class='science-bit'><p><strong>Physiognomic Correlates:</strong> A high index score is associated with a combination of 'Yang' features: a strong jaw and chin (willpower), a prominent nose (ego and ambition), and clear, focused eyes (intent). This combination suggests a personality that is driven to act and implement ideas.</p></div>" +
+                      "<p><strong>Cognitive Mitigation Strategy:</strong> Before executing a high-risk trade, engage in a 'pre-mortem' analysis. Assume the investment has failed catastrophically and write down a plausible narrative for how this failure occurred. This stimulates a more balanced, analytical assessment of potential risks.</p>"
+            },
+            yinYang: {
+                title: "Intuition vs. Logic Balance",
+                body: "<p><strong>Behavioral Implication:</strong> This visualizer represents the theoretical balance between the intuitive, holistic, and action-oriented 'Yang' aspects of cognition versus the analytical, detail-oriented, and patient 'Yin' aspects.</p>" +
+                      "<div class='science-bit'><p><strong>Physiognomic Correlates:</strong> 'Yang' is represented by prominent, angular, and bony features (high cheekbones, strong jaw, prominent nose). 'Yin' is represented by softer, rounded, and more fleshy features. A balanced face would show a harmonious blend, suggesting a flexible cognitive style. A strong dominance of one type may indicate a preference for either intuitive or analytical decision-making.</p></div>" +
+                      "<p><strong>Cognitive Mitigation Strategy:</strong> Actively seek out a complementary perspective. If your cognitive style leans heavily intuitive, consult with a trusted analytical thinker before making a major decision, and vice versa. This helps to ensure that a decision has been examined from both angles.</p>"
+            }
+        };
+
+        function showModal(trait) {
+            const data = modalContent[trait];
+            if (data) {
+                document.getElementById('modal-title').textContent = data.title;
+                document.getElementById('modal-body').innerHTML = data.body;
+                document.getElementById('debias-modal').style.display = 'flex';
+            }
+        }
+        function closeModal() { document.getElementById('debias-modal').style.display = 'none'; }
+        function scrollToUpload() { document.getElementById('upload-section').scrollIntoView({ behavior: 'smooth' }); }
+        function dropHandler(ev) { ev.preventDefault(); ev.stopPropagation(); document.getElementById('dropZone').classList.remove('dragover'); if (ev.dataTransfer.items && ev.dataTransfer.items[0].kind === 'file') { processFile(ev.dataTransfer.items[0].getAsFile()); } }
+        function dragOverHandler(ev) { ev.preventDefault(); ev.stopPropagation(); document.getElementById('dropZone').classList.add('dragover'); }
+        function dragLeaveHandler(ev) { ev.preventDefault(); ev.stopPropagation(); document.getElementById('dropZone').classList.remove('dragover'); }
+        function handleFileSelect(event) { if (event.target.files[0]) { processFile(event.target.files[0]); } }
+        
+        async function processFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert("Invalid file type. Please upload an image file.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+
+            const loadingContainer = document.getElementById('loadingContainer');
+            const loadingText = document.getElementById('loadingText');
+            const dropZone = document.getElementById('dropZone');
+            dropZone.style.display = 'none';
+            loadingContainer.style.display = 'block';
+
+            const loadingMessages = ["Initializing Secure Image Read...", "Parsing Facial Landmarks...", "Calculating Geometric Vectors...", "Mapping to Behavioral Correlates...", "Compiling Physiognomic Profile...", "Generating Final Report..."];
+            let messageIndex = 0;
+            const messageInterval = setInterval(() => { loadingText.textContent = loadingMessages[messageIndex++ % loadingMessages.length]; }, 800);
+            
+            setTimeout(() => {
+                clearInterval(messageInterval);
+                loadingContainer.style.display = 'none';
+                dropZone.style.display = 'block';
+                displayResults();
+            }, 4800);
+        }
+
+        function displayResults() {
+            // --- SIMULATED ANALYSIS ---
+            // In a real application, this would be the output of a computer vision model.
+            // Here, we just generate random but plausible values for demonstration.
+            const profile = {
+                risk: Math.random() * 100,
+                lossAversion: Math.random() * 100,
+                temporalDiscounting: Math.random() * 100,
+                panic: Math.random() * 100,
+                dca: Math.random() * 100,
+                mistake: Math.random() * 100,
+                yang: Math.random() * 100,
+                yin: Math.random() * 100,
+            };
+
+            const actionIndex = (profile.risk + (100 - profile.lossAversion) + profile.dca) / 3;
+            document.getElementById('ape-index-score').textContent = `${Math.round(actionIndex)}`;
+            document.getElementById('ape-index-text').textContent = `> ACTION_BIAS: ${actionIndex > 70 ? 'HIGH' : actionIndex > 40 ? 'BALANCED' : 'LOW'}`;
+            
+            const totalSystem = profile.yang + profile.yin || 1;
+            const yangPercent = (profile.yang / totalSystem) * 100;
+            const yinPercent = (profile.yin / totalSystem) * 100;
+            document.getElementById('dopamine-bar').style.height = `${Math.max(10, yangPercent)}%`;
+            document.getElementById('serotonin-bar').style.height = `${Math.max(10, yinPercent)}%`;
+
+            // Core Behavioral Profile
+            document.getElementById('risk-meter').style.width = `${profile.risk}%`;
+            document.getElementById('risk-text').textContent = `> TOLERANCE_LEVEL: ${profile.risk > 70 ? 'HIGH' : profile.risk < 30 ? 'LOW' : 'AVERAGE'}`;
+            
+            document.getElementById('loss-aversion-meter').style.width = `${profile.lossAversion}%`;
+            document.getElementById('loss-aversion-text').textContent = `> SENSITIVITY: ${profile.lossAversion > 70 ? 'HIGH' : profile.lossAversion < 30 ? 'LOW' : 'MODERATE'}`;
+
+            document.getElementById('temporal-discounting-meter').style.width = `${profile.temporalDiscounting}%`;
+            document.getElementById('temporal-discounting-text').textContent = `> PREFERENCE: ${profile.temporalDiscounting > 70 ? 'IMMEDIATE' : profile.temporalDiscounting < 30 ? 'DELAYED' : 'BALANCED'}`;
+
+            document.getElementById('panic-meter').style.width = `${profile.panic}%`;
+            document.getElementById('panic-text').textContent = `> STABILITY: ${profile.panic > 70 ? 'LOW' : profile.panic < 30 ? 'HIGH' : 'MODERATE'}`;
+
+            document.getElementById('dca-meter').style.width = `${profile.dca}%`;
+            document.getElementById('dca-text').textContent = `> DISCIPLINE: ${profile.dca > 70 ? 'HIGH' : profile.dca < 30 ? 'LOW' : 'MODERATE'}`;
+
+            document.getElementById('mistake-meter').style.width = `${profile.mistake}%`;
+            document.getElementById('mistake-text').textContent = `> FLEXIBILITY: ${profile.mistake > 70 ? 'HIGH' : profile.mistake < 30 ? 'LOW' : 'MODERATE'}`;
+
+            document.getElementById('results-section').style.display = 'block';
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Duplicate ticker content for seamless scroll
+        const tickerContent = document.querySelector('.ticker-content');
+        if (tickerContent) {
+            tickerContent.innerHTML += tickerContent.innerHTML;
+        }
+    </script>
+</body>
+</html>
